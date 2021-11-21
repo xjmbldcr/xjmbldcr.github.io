@@ -1,0 +1,315 @@
+<head>
+    <meta name="format-detection" content="telephone=no"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+    <link rel="stylesheet" type="text/css"
+          href="./wechat/style.css"/>
+    <link rel="stylesheet" type="text/css"
+          href="./wechat/style-newindex.css"/>
+    <link rel="stylesheet" type="text/css"
+          href="./wechat/weui.min.css"/>
+    <link rel="stylesheet" type="text/css"
+          href="./wechat/mescroll.min.css"/>
+		  
+	<script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.4.0.js"></script>
+	
+	<script type="text/javascript"
+			src="./wechat/jquery-3.5.1.min.js"></script>
+    <script type="text/javascript"
+            src="./wechat/common.js"></script>
+    <script type="text/javascript"
+            src="./wechat/wechat_common.js"></script>
+		  
+	<script type="text/javascript"
+		src="./wechat/base64.min.js"></script>
+	<script type="text/javascript"
+		src="./wechat/json2.js"></script>
+    <script type="text/javascript"
+            src="./wechat/weui.min.js"></script>
+    <script type="text/javascript"
+            src="./wechat/mescroll.min.js"></script>
+</head>
+
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <title>福州大学一卡通</title>
+    <link rel="stylesheet" type="text/css"
+          href="./wechat/style-newindex.css"/>
+    <link rel="stylesheet" type="text/css"
+          href="./wechat/newindex-card.css" />
+   
+    <script>
+		window.onerror = function(errorMessage, scriptURI, lineNumber,columnNumber,errorObj) { 
+			/*alert("错误信息：" +errorMessage+",出错文件："+scriptURI+"出错行号："+lineNumber+"出错列号："+columnNumber+"错误详情："+errorObj); */
+		}
+        $(document).ready(function () {
+            $("#New-Body").show();
+            $("#New-Body .new-head.new-head-s2").show();
+            var widthP = document.documentElement.clientWidth;
+            var widthS = $(".new-body .new-head-s2 ").outerWidth();
+            $(".new-body .new-head-s2").css("margin-left", (widthP - widthS) / 2);
+
+        })
+    </script>
+    
+    <script type="text/javascript">
+        var errNum = 0;
+        $(function () {
+            //document.body.addEventListener('touchstart', function () {});
+			//weui.alert('test');
+            var cardInfo = {"errmsg":"查询成功！","card":[{"elec_accamt":"0","merge_accamt":"0","createdate":"20190902","cert":"350402199711104013","scard_num":"0","freezeflag":"0","certtype":"001","cardname":"正式卡","idflag":"1","cardtype":"800","unsettle_amount":"-9304","barflag":"0","db_balance":"10220","merge_flag":"0","autotrans_amt":"5000","autotrans_flag":"1","acc_status":"0","bankacc":"","lostflag":"0","sno":"N190327125","phone":"","mscard":"0","name":"张钟旺","autotrans_limite":"2000","account":"44755","expdate":"20390827"}],"retcode":"0"}
+            setCardBalance(cardInfo, true);
+            var accInfo = {"errmsg":"电子账户信息不存在","account":"44755","retcode":"60006","accinfo":[]}
+            setAccBalance(accInfo)
+            var idInfo = {"idinfo":[{"area":"001","areaname":"福州大学","nation":"","sex":"male","certname":"身份证","cert":"350402199711104013","dept":"139","pidname":"研究生","people":"汉族","pidcode":"04","nationcode":"","deptname":"数学与计算机科学学院","pidclass":"1","teacher":{"jszc":""},"sno":"N190327125","phone":"","certtype":"001","name":"张钟旺","indate":"","peoplecode":"01","addr":"","jg":"","email":""}],"errmsg":"查询成功！","retcode":"0"}
+            setIdino(idInfo)
+
+            // getCardInfo(setCardBalance,true);
+            getAccInfo(setAccBalance,true);
+            getIdInfo(setIdino);
+            var shallMessageSwitch = $('#shallMessageSwitch').val();
+            if (shallMessageSwitch == '1') {
+                selectAllMessage();
+            }
+        });
+
+        function setCardBalance(retMap) {
+            if (checkRequestFlag(retMap)) {
+                var card = (retMap.card)[0];
+                var db_balance = card.db_balance;
+                var unsettle_amount = card.unsettle_amount;
+                db_balance = parseFloat(fenToYuan(db_balance));
+                unsettle_amount = parseFloat(fenToYuan(unsettle_amount));
+                var lostflag = card.lostflag;
+                var freezeflag = card.freezeflag;
+                var status = '正常';
+                if (lostflag == 1) {
+                    status = '挂失';
+                }
+                if (freezeflag == 1) {
+                    status = '冻结';
+                }
+                $('#status').html(status);
+                $('#db_balance').html(db_balance.toFixed(2));
+                AddTotalAsset(db_balance);
+                $('#unsettle_amount').html(unsettle_amount.toFixed(2));
+                AddTotalAsset(unsettle_amount);
+            } else {
+                errNum++;
+                if (errNum >= 2) {
+                    weui.alert('TSM服务器连接失败，已通知管理员，请稍后重试！');
+                }
+            }
+        }
+
+        function setAccBalance(retMap) {
+            if (checkRequestFlag(retMap)) {
+                var accinfo = retMap.accinfo;
+                var acc_balance = 0;
+                $.each(accinfo, function (i, e) {
+                    var balance = e.balance;
+                    acc_balance += parseFloat(fenToYuan(balance));
+                });
+                $('#acc_balance').html(acc_balance.toFixed(2));
+                AddTotalAsset(acc_balance);
+            } else {
+                errNum++;
+                if (errNum >= 2) {
+                    weui.alert('TSM服务器连接失败，已通知管理员，请稍后重试！');
+                }
+            }
+        }
+
+        function AddTotalAsset(money) {
+            var total_asset = parseFloat($('#total_asset').html());
+            total_asset += money;
+            $('#total_asset').html(parseFloat(total_asset.toFixed(2)));
+        }
+
+        function setIdino(retMap) {
+            if (checkRequestFlag(retMap)) {
+                console.log(retMap);
+                var idinfo = retMap.idinfo;
+                // var deptName = idinfo[0].deptname;
+                var deptName = "计算机与大数据学院";
+                $('#deptName').html(deptName);
+                var pidclass = idinfo[0].pidclass;
+                $('#pidclass').val(pidclass);
+            } else {
+                errNum++;
+                if (errNum >= 2) {
+                    weui.alert('TSM服务器连接失败，已通知管理员，请稍后重试！');
+                }
+            }
+            getSubCardInfo(showSubCardApplication);
+            var subCardInfo = {"slaves":[],"errmsg":"无数据","retcode":"60038"}
+            showSubCardApplication(subCardInfo);
+            
+        }
+
+        function showSubCardApplication(retMap) {
+            var subCardFlag = false;
+            if (checkRequestFlag(retMap)) {
+                subCardFlag = true;
+            }
+            var allSchoolJk = '[{"jkbh":"0001","icon":"ioc-use.png","name":"基本信息"},{"jkbh":"0018","icon":"ioc-06.png","name":"二维码"},{"jkbh":"0002","icon":"ioc-recharge.png","name":"卡片充值"},{"jkbh":"0005","icon":"ioc-pass.png","name":"密码修改"},{"jkbh":"0010","icon":"ioc-bill.png","name":"我的账单"},{"jkbh":"0004","icon":"ioc-03.png","name":"挂失\/解挂"},{"jkbh":"0022","icon":"app_bind2.png","name":"他人卡充值"},{"jkbh":"0008","icon":"ioc-04.png","name":"卡片解绑"}]';
+            var JkList = $.parseJSON(allSchoolJk);
+            var pidclass = $('#pidclass').val();
+            $.each(JkList, function (i, e) {
+                var showFlag = false;
+                var jkbh = e.jkbh;
+                if (jkbh == '0012' || jkbh == '0013') {
+                    showFlag = subCardFlag;
+                } else {
+                    showFlag = true;
+                }
+                //申请退费功能只有学生身份可以使用
+                if (jkbh == "0028" && pidclass != "1") {
+                    showFlag = false;
+                }
+                var listLength = $('#jk_list').find('.new-application-item').length;
+                if (listLength >= 12) {
+                    showFlag = false;
+                }
+                if (showFlag) {
+                    var name = e.name;
+                    var icon = e.icon;
+                    $('#jk_list').append('<li class="new-application-item"><a href="' + ctxpath + '/url/redirectJkbh.html?jkbh=' + jkbh
+                        + '"><i class="new-ico"><img src="./wechat/images/' + icon +
+                        '"></i><span class="new-span">' + name + '</span></a></li>');
+                }
+
+            });
+        }
+
+        var pageindex = 1;
+        var pagesize = 3;
+
+        function moremesg() {
+            window.location.href = createUrl("/notice/news")
+        }
+
+        function toPayCode() {
+            window.location.href = createUrl("/url/redirectJkbh") + '?jkbh=0018';
+        }
+
+        function selectAllMessage() {
+            getMessage(pageindex, pagesize, setMessage);
+        }
+
+        function setMessage(retMap) {
+            if (checkRequestFlag(retMap)) {
+                showMessage(retMap);
+            }
+        }
+
+        function getMessage(pageindex, pagesize, callback) {
+            var url = createUrl("/home/message");
+            var param = {
+                pageindex: pageindex,
+                pagesize: pagesize
+            };
+            ajax(url, param, callback, true);
+        }
+
+        function showMessage(retMap) {
+            var data = retMap.data.rows;
+            var total = retMap.data.total;
+            var array = data;
+            var html = '';
+            if (array.length == 0) {
+                $('#ul').html('<li class="new-notic-item"><p>暂无通知公告消息</p><em></em></li>');
+                clearInterval(codnum);
+            } else {
+                var shallGatewayUrl = $('#shallGatewayUrl').val();
+                for (var i = 0; i < array.length; i++) {
+                    html += '<li class="new-notic-item">' +
+                        '<a style="text-decoration: none;color:inherit;" href="' + shallGatewayUrl + '/Category/pPageDetails?id=' + array[i].ID + '&title=' + array[i].TITLE
+                        + '&newsdetailsname=' + array[i].NEWSDETAILSNAME + '&pagename=' + array[i].PAGENAME
+                        + '&cometitle=1"><p>' + array[i].TITLE + '</p><em>' + array[i].FBTIME + '</em></a></li>';
+                }
+                $('#ul').html(html);
+            }
+        }
+    </script>
+</head>
+<body>
+<input id="shallGatewayUrl" type="hidden" value=""/>
+<input id="shallMessageSwitch" type="hidden" value="0"/>
+<input id="pidclass" type="hidden"/>
+<div class="new-body" id="New-Body">
+    <div class="new-head new-head-s2">
+        <div class="new-use new-use-s2">
+            <div class="new-use-logo"><img
+                    src="./wechat/images/uselogo.png"></div>
+            <!--卡信息-->
+            <div class="new-use-info">
+                <ul class="new-usein-b">
+                    <li><b class="new-font-b">张钟旺</b></li>
+                    <li><b class="new-font-b">N190327125</b></li>
+                    <li><b id="deptName" class="new-font-b"></b></li>
+                </ul>
+                <div class="new-usein-c"><span>借书证号</span>1121903271251</div>
+            </div>
+            <div class="new-use-photo">
+                <span class="new-use-photo-mian"><img
+                        src="data:image/png;base64,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"></span>
+            </div>
+        </div>
+        <div class="new-use-contact ">
+            <ul>
+                <li class="new-usec-left"><span>服务热线</span>(0591-22865316)</li>
+                <li class="new-usec-right"><span>网络安全与信息化办公室</span></li>
+            </ul>
+        </div>
+    </div>
+    <div class="new-box">
+        <div class="new-card new-cards2">
+            <ul>
+                <li class="new-card-item">
+                    <span>总资产</span>
+                    <b id="total_asset">0.00</b>
+                </li>
+                <li class="new-card-item">
+                    <span>校园卡</span>
+                    <b id="db_balance">0.00</b>
+                </li>
+                <li class="new-card-item">
+                    <span>过渡余额</span>
+                    <b id="unsettle_amount">0.00</b>
+                </li>
+                <li class="new-card-item">
+                    <span>电子账户</span>
+                    <b id="acc_balance">0.00</b>
+                </li>
+                <li class="justify-fix"></li>
+            </ul>
+        </div>
+    </div>
+    <div class="new-box">
+        <div class="new-box-title"><b></b><span>应用</span>
+            <a href="../url/redirectJkbh.html?jkbh=0003" jkbh="0003">
+                <i class="new-next">
+                    <img src="./wechat/images/ioc-next.png"></i>
+                <em class="y-title-more">点击查看更多</em></a>
+        </div>
+        <div class="new-box-contant">
+            <ul class="new-application" id="jk_list">
+            </ul>
+        </div>
+    </div>
+    
+</div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
